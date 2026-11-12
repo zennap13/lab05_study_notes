@@ -22,22 +22,22 @@ class _NotesScreenState extends State<NotesScreen> {
   }
 
   void _setupFCM() {
-    // Sayfa açıldığında bildirimi ekranda gösterir
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Lab 05 Test: FCM test message',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Lab 05 Test: FCM test message',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            backgroundColor: Colors.deepPurple,
+            duration: Duration(seconds: 30),
+            behavior: SnackBarBehavior.floating,
           ),
-          backgroundColor: Colors.deepPurple,
-          duration: Duration(seconds: 30),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+        );
+      }
     });
 
-    // Firebase bildirim dinleyicisi
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       if (message.notification != null && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -58,7 +58,7 @@ class _NotesScreenState extends State<NotesScreen> {
   void _showAddNoteDialog() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Add Note'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -75,23 +75,27 @@ class _NotesScreenState extends State<NotesScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Cancel'),
           ),
           ElevatedButton(
             onPressed: () async {
               final activeUid =
                   widget.uid ?? FirebaseAuth.instance.currentUser?.uid;
-              if (activeUid != null && _titleController.text.isNotEmpty) {
+              final enteredTitle = _titleController.text;
+              final enteredContent = _contentController.text;
+
+              if (activeUid != null && enteredTitle.isNotEmpty) {
+                Navigator.pop(dialogContext);
+                _titleController.clear();
+                _contentController.clear();
+
                 await FirebaseFirestore.instance.collection('notes').add({
-                  'title': _titleController.text,
-                  'content': _contentController.text,
+                  'title': enteredTitle,
+                  'content': enteredContent,
                   'userId': activeUid,
                   'createdAt': FieldValue.serverTimestamp(),
                 });
-                _titleController.clear();
-                _contentController.clear();
-                if (mounted) Navigator.pop(context);
               }
             },
             child: const Text('Save'),
