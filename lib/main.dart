@@ -32,9 +32,9 @@ void main() async {
   if (settings.authorizationStatus == AuthorizationStatus.authorized) {
     try {
       String? token = await messaging.getToken();
-      print('FCM token: $token');
+      debugPrint('FCM token: $token');
     } catch (e) {
-      print('Token retrieval error: $e');
+      debugPrint('Token retrieval error: $e');
     }
   }
 
